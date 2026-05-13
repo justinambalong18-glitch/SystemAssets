@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Asset Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* SPA Specific Transitions */
+    .page-section {
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+    }
+    .page-section.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Login Overrides for SPA */
+    #login-view {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+    }
+  </style>
+</head>
+<body data-theme="admin">
+
+  <!-- LOGIN VIEW -->
+  <div id="login-view">
+    <div class="card" style="width: 100%; max-width: 440px; position: relative; z-index: 10;">
+      <div class="logo-area">
+        <div class="logo-icon">🏫</div>
+        <h1 class="logo-title">School<span>Asset</span></h1>
+        <p class="logo-sub">Management System</p>
+      </div>
+
+      <div class="role-tabs">
+        <button class="role-tab active" data-role="admin" onclick="setRole('admin')">Admin</button>
+        <button class="role-tab" data-role="staff" onclick="setRole('staff')">Staff</button>
+      </div>
+
+      <div class="error-msg" id="loginError">Invalid credentials. Please try again.</div>
+
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="username" placeholder="Enter your username" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••">
+      </div>
+
+      <button class="btn-login admin" id="loginBtn" onclick="handleLogin()">Sign In as Admin</button>
+
+      <div class="divider">Demo Credentials</div>
+      <div style="text-align: center; color: var(--muted); font-size: 12px; line-height: 1.6;">
+        Admin: <b>admin / admin123</b><br>
+        Staff: <b>staff / staff123</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP VIEW -->
+  <div id="app-view" style="display: none; width: 100%;">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo"><span>🏫</span> School<span>Asset</span></div>
+      <div class="role-badge" id="sidebarRoleBadge">👑 Admin Panel</div>
+      
+      <!-- Admin Nav -->
+      <nav class="nav-section" id="nav-admin">
+        <div class="nav-label">Overview</div>
+        <a class="nav-item active" href="#dashboard" onclick="navigate('dashboard')"><span class="icon">📊</span> Dashboard</a>
+        <div class="nav-label">Asset Management</div>
+        <a class="nav-item" href="#assets" onclick="navigate('assets')"><span class="icon">📦</span> All Assets</a>
+        <a class="nav-item" href="#categories" onclick="navigate('categories')"><span class="icon">🗂️</span> Categories</a>
+        <div class="nav-label">Operations</div>
+        <a class="nav-item" href="#borrowing" onclick="navigate('borrowing')"><span class="icon">🔄</span> Borrowing</a>
+        <a class="nav-item" href="#maintenance" onclick="navigate('maintenance')"><span class="icon">🔧</span> Maintenance</a>
+        <a class="nav-item" href="#reports" onclick="navigate('reports')"><span class="icon">📋</span> Reports</a>
+        <div class="nav-label">System</div>
+        <a class="nav-item" href="#users" onclick="navigate('users')"><span class="icon">👥</span> Users</a>
+      </nav>
+
+      <!-- Staff Nav -->
+      <nav class="nav-section" id="nav-staff" style="display: none;">
+        <div class="nav-label">Overview</div>
+        <a class="nav-item" href="#staff-dashboard" onclick="navigate('staff-dashboard')"><span class="icon">📊</span> Dashboard</a>
+        <div class="nav-label">Assets</div>
+        <a class="nav-item" href="#browse" onclick="navigate('browse')"><span class="icon">📦</span> Browse Assets</a>
+        <a class="nav-item" href="#my-borrows" onclick="navigate('my-borrows')"><span class="icon">🔄</span> My Borrowings</a>
+        <div class="nav-label">Requests</div>
+        <a class="nav-item" href="#requests" onclick="navigate('requests')"><span class="icon">📝</span> Submit Request</a>
+        <a class="nav-item" href="#report-issue" onclick="navigate('report-issue')"><span class="icon">⚠️</span> Report Issue</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+      </div>
+    </aside>
+
+    <!-- CONTENT AREA -->
+    <main class="main">
+      <div class="topbar">
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div class="topbar-right">
+          <div id="topbarActions"></div>
+          <div class="user-chip"><div class="avatar" id="userAvatar">👑</div> <span id="uNameDisplay">Admin</span></div>
+        </div>
+      </div>
+
+      <!-- SECTIONS -->
+      
+      <!-- Admin Dashboard -->
+      <section id="dashboard" class="page-section">
+        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px;">
+          <div class="stat-card blue">
+            <div class="stat-label">Total Assets</div>
+            <div class="stat-value" id="statTotalAssets">0</div>
+          </div>
+          <div class="stat-card cyan">
+            <div class="stat-label">Available</div>
+            <div class="stat-value" id="statAvailAssets">0</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-label">Borrowed</div>
+            <div class="stat-value" id="statBorrowedAssets">0</div>
+          </div>
+        </div>
+        <div class="grid2" style="margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">Asset Status Distribution</div></div>
+            <div id="statusSummary" style="padding: 20px 0; color: var(--muted); font-size: 14px;">The database is synchronized and tracking all school property in real-time.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">System Health</div></div>
+            <div style="padding: 20px 0; line-height: 2;">
+              <div style="color: var(--green); font-weight: 700;">● Database Connected</div>
+              <div style="color: var(--green); font-weight: 700;">● LocalStorage Active</div>
+              <div style="color: var(--green); font-weight: 700;">● SPA Engine Ready</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Admin Assets -->
+      <section id="assets" class="page-section">
+        <div class="toolbar" style="display: flex; gap: 16px; margin-bottom: 32px; align-items: center;">
+          <input class="search-bar" id="assetSearch" style="flex: 1;" placeholder="🔍  Search assets..." oninput="renderAssetsTable()">
+          <select id="assetFilterStatus" style="width: 200px;" onchange="renderAssetsTable()">
+            <option value="">All Status</option>
+            <option>Available</option><option>Borrowed</option><option>Maintenance</option>
+          </select>
+        </div>
+        <div class="panel">
+          <table id="assetTable">
+            <thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Status</th><th>Location</th><th>Actions</th></tr></thead>
+            <tbody id="assetTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Admin Categories -->
+      <section id="categories" class="page-section">
+        <div class="grid3" id="catGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px;"></div>
+      </section>
+
+      <!-- Admin Borrowing -->
+      <section id="borrowing" class="page-section">
+        <div class="panel">
+          <table>
+            <thead><tr><th>ID</th><th>Asset</th><th>Borrower</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="borrowTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Admin Maintenance -->
+      <section id="maintenance" class="page-section">
+        <div class="panel">
+          <table>
+            <thead><tr><th>ID</th><th>Asset</th><th>Issue</th><th>Status</th><th>Technician</th><th>Action</th></tr></thead>
+            <tbody id="maintTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Admin Reports -->
+      <section id="reports" class="page-section">
+        <div class="toolbar" style="margin-bottom: 32px;">
+          <button class="btn btn-sm" onclick="exportCSV()">📥 Export CSV Report</button>
+        </div>
+        <div class="summary-grid" id="reportSummary" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;"></div>
+      </section>
+
+      <!-- Admin Users -->
+      <section id="users" class="page-section">
+        <div class="users-grid" id="usersGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px;"></div>
+      </section>
+
+      <!-- Staff Dashboard -->
+      <section id="staff-dashboard" class="page-section">
+        <div class="welcome-banner">
+          <div class="welcome-text">
+            <h2 style="font-family: 'Syne', sans-serif; font-size: 32px;">Welcome back, <span id="staffGreetName">Staff</span>! 👋</h2>
+            <p style="margin-top: 8px; opacity: 0.8;">Manage your departmental assets and requests efficiently.</p>
+          </div>
+          <button class="btn btn-primary" onclick="navigate('browse')">Browse All Assets</button>
+        </div>
+        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;">
+          <div class="stat-card green">
+            <div class="stat-label">Your Active Borrowings</div>
+            <div class="stat-value" id="sStatBorrow">0</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-label">Pending Requests</div>
+            <div class="stat-value">0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Staff Browse -->
+      <section id="browse" class="page-section">
+        <div class="toolbar" style="margin-bottom: 32px;">
+          <input class="search-bar" id="browseSearch" placeholder="🔍 Search school property..." oninput="renderBrowseGrid()">
+        </div>
+        <div class="assets-grid" id="browseGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;"></div>
+      </section>
+
+      <!-- Staff My Borrows -->
+      <section id="my-borrows" class="page-section">
+        <div class="panel">
+          <table>
+            <thead><tr><th>ID</th><th>Asset</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="myBorrowsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Staff Requests -->
+      <section id="requests" class="page-section">
+        <div class="grid2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+          <div class="panel">
+            <div class="panel-title">New Asset Request</div>
+            <p style="color: var(--muted); font-size: 14px; margin: 12px 0 24px;">Request new equipment for your classroom or office.</p>
+            <div class="form-group"><label>Item Description</label><input id="reqAsset" placeholder="e.g. 5 more plastic chairs"></div>
+            <div class="form-group"><label>Reason</label><textarea id="reqReason" style="min-height: 100px;"></textarea></div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="submitStaffRequest()">Submit Official Request</button>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Request History</div>
+            <div id="staffRequestsList" style="margin-top: 24px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Staff Report Issue -->
+      <section id="report-issue" class="page-section">
+        <div class="panel" style="max-width: 600px;">
+          <div class="panel-title">⚠️ Report Damage or Issue</div>
+          <p style="color: var(--muted); font-size: 14px; margin: 12px 0 24px;">Found something broken? Report it to maintenance here.</p>
+          <div class="form-group"><label>Select Affected Asset</label><select id="issueAsset"></select></div>
+          <div class="form-group"><label>Detailed Description</label><textarea id="issueDesc" style="min-height: 120px;"></textarea></div>
+          <button class="btn btn-primary" style="width: 100%; background: var(--red);" onclick="submitStaffIssue()">Send Issue Report</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODALS (Global) -->
+  <div class="modal-overlay" id="globalModal">
+    <div class="modal">
+      <div class="modal-title" id="mTitle">Modal Title</div>
+      <div id="modalBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-sm" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="mPrimaryBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="success-toast" id="toast">✅ Action successful!</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
